@@ -1349,6 +1349,9 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 			// this estimator does not provide a separate vertical position time derivative estimate, so use the vertical velocity
 			local_pos.z_deriv = z_est[1];
 
+			// this estimator does not provide a separate vertical position time derivative estimate, so use the vertical velocity
+			local_pos.z_deriv = z_est[1];
+
 			if (local_pos.dist_bottom_valid) {
 				local_pos.dist_bottom = dist_ground;
 				local_pos.dist_bottom_rate = - z_est[1];
