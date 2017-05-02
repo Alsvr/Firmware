@@ -264,6 +264,7 @@ private:
 	float _vel_z_lp;
 	float _acc_z_lp;
 	float _vel_max_xy;  /**< equal to vel_max except in auto mode when close to target */
+	float _z_derivative; /**< velocity in z that agrees with position rate */
 
 	bool _in_takeoff; /**< flag for smooth velocity setpoint takeoff ramp */
 	float _takeoff_vel_limit; /**< velocity limit value which gets ramped up */
@@ -438,6 +439,7 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_vel_z_lp(0),
 	_acc_z_lp(0),
 	_vel_max_xy(0.0f),
+	_z_derivative(0.0f),
 	_takeoff_vel_limit(0.0f),
 	_z_reset_counter(0),
 	_xy_reset_counter(0),
@@ -1623,7 +1625,20 @@ MulticopterPositionControl::update_velocity_derivative()
 		} else {
 			_vel(2) = _local_pos.vz;
 		}
+
+		if (!_run_alt_control) {
+			/* set velocity to the derivative of position
+			 * because it has less bias but blend it in across the landing speed range*/
+			float weighting = fminf(fabsf(_vel_sp(2)) / _params.land_speed, 1.0f);
+			_vel(2) = _z_derivative * weighting + _vel(2) * (1.0f - weighting);
+
+		}
+
 	}
+
+	if(PX4_ISFINITE(_local_pos.z_deriv)){
+		_z_derivative = _local_pos.z_deriv;
+	};
 
 	_vel_err_d(0) = _vel_x_deriv.update(-_vel(0));
 	_vel_err_d(1) = _vel_y_deriv.update(-_vel(1));
